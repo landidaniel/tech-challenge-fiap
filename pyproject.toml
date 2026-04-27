@@ -1,50 +1,64 @@
 [project]
 name = "tech-challenge-fiap-churn"
-version = "0.1.0"
+version = "0.3.0"
 description = "Pipeline de ML End-to-End para previsão de Churn - FIAP Postech"
 readme = "README.md"
 requires-python = ">=3.11"
 
 # Dependências do Projeto (Single Source of Truth)
 dependencies = [
+    # Data
     "pandas>=2.0.0",
     "numpy>=1.24.0",
+    "openpyxl>=3.1.0",
+    # ML / Modelagem
+    "scikit-learn>=1.2.0",
+    "torch>=2.0.0",
+    # Visualizacao
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
-    "scikit-learn>=1.2.0",
-    "openpyxl>=3.1.0",
+    # Tracking
     "mlflow>=2.3.0",
-    "ipykernel>=6.23.0",
-    "torch>=2.0.0",   # Essencial para a Etapa 2 (Redes Neurais)
-    "torchvision",
-    "pydantic>=2.0.0", # Essencial para a Etapa 3 (API e Validação)
+    # API (Etapa 3)
     "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "pydantic>=2.0.0",
+    # Notebooks
+    "ipykernel>=6.23.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
     "black>=23.0.0",
     "httpx>=0.24.0",
+    "pandera>=0.17.0",
 ]
 
-# Configuração de Testes (Pytest) - Exigência de reprodutibilidade
+# Configuração de Testes (Pytest)
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v"
+addopts = "-v --tb=short"
 
-# Configuração de Linting e Formatação (Ruff) - Garante código limpo sem erros
+# Linting e Formatacao
 [tool.ruff]
 line-length = 88
-select = ["E", "F", "I"] 
 fix = true
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ["py311"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
