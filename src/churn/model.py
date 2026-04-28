@@ -32,23 +32,42 @@ class ChurnMLP(nn.Module):
         dropout: float | list[float] = 0.3,
     ) -> None:
         super().__init__()
-        layers: list[nn.Module] = []
+        self.layers = nn.ModuleList()
         in_dim = input_dim
+        
         for i, h in enumerate(hidden_dims):
-            # Se dropout for uma lista, usa o valor da camada, senão usa o valor fixo
             d = dropout[i] if isinstance(dropout, list) else dropout
-            layers += [
+            self.layers.append(nn.Sequential(
                 nn.Linear(in_dim, h),
                 nn.BatchNorm1d(h),
                 nn.ReLU(),
-                nn.Dropout(d),
-            ]
+                nn.Dropout(d)
+            ))
             in_dim = h
-        layers.append(nn.Linear(in_dim, 1))
-        self.net = nn.Sequential(*layers)
+            
+        self.output_layer = nn.Linear(in_dim, 1)
+        
+        # Projeção para a Skip Connection (ajusta a dimensão do input para a dimensão da primeira camada)
+        self.input_shortcut = nn.Linear(input_dim, hidden_dims[0])
+
+        # Inicialização He (Kaiming) para estabilidade
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x).squeeze(1)
+        # Primeira camada com Skip Connection
+        identity = self.input_shortcut(x)
+        out = self.layers[0](x)
+        out = out + identity # Aqui a mágica acontece!
+        
+        # Restante das camadas
+        for i in range(1, len(self.layers)):
+            out = self.layers[i](out)
+            
+        return self.output_layer(out).squeeze(1)
 
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
         """Retorna P(churn=1) para cada amostra (sem gradiente)."""

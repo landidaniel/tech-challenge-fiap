@@ -30,7 +30,7 @@ from churn_baseline.model import get_baseline_model
 # Para usar o PyTorch dentro do K-Fold facilmente, criamos uma classe "Wrapper" 
 # que se comporta como um modelo do Scikit-Learn (tem fit e predict_proba)
 class PyTorchWrapper:
-    def __init__(self, input_dim, hidden_dims=[512, 256, 128, 64], epochs=200, lr=0.001, dropout=[0.5, 0.3, 0.2, 0.1]):
+    def __init__(self, input_dim, hidden_dims=[256, 128, 64], epochs=150, lr=0.001, dropout=0.2):
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.epochs = epochs
@@ -47,8 +47,8 @@ class PyTorchWrapper:
         train_ds = TensorDataset(torch.FloatTensor(X_t), torch.FloatTensor(y_t))
         val_ds = TensorDataset(torch.FloatTensor(X_v), torch.FloatTensor(y_v))
         
-        train_loader = DataLoader(train_ds, batch_size=256, shuffle=True)
-        val_loader = DataLoader(val_ds, batch_size=256, shuffle=False)
+        train_loader = DataLoader(train_ds, batch_size=64, shuffle=True)
+        val_loader = DataLoader(val_ds, batch_size=64, shuffle=False)
 
         # Chamando a função oficial de treinamento do projeto (sem pos_weight para focar em AUC)
         train_mlp(
@@ -88,35 +88,36 @@ def run_hypothesis_test(X, y, baseline_pipeline, mlp_wrapper, n_splits=5, alpha=
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
         
-        # --- PREPROCESSAMENTO (Encoding Oficial) ---
+        # --- PREPROCESSAMENTO (Encoding Oficial + Scaling) ---
         encoder = TelcoEncoder()
         X_train_enc = encoder.fit_transform(X_train)
         X_test_enc = encoder.transform(X_test)
 
-        # 1. Baseline Original (Conforme definido no projeto: Scaler + LogReg)
-        # O baseline_pipeline já possui o StandardScaler interno e não usa PCA
-        baseline_pipeline.fit(X_train_enc, y_train)
-        pred_base = baseline_pipeline.predict_proba(X_test_enc)[:, 1]
-        score_base = roc_auc_score(y_test, pred_base)
-        auc_baseline.append(score_base)
-        
-        # 2. Sistema MLP Turbinado (Com Normalização + PCA + Arquitetura Pro)
+        # 1. Normalização
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train_enc)
         X_test_scaled = scaler.transform(X_test_enc)
 
-        pca = PCA(n_components=0.95, random_state=SEED)
-        X_train_pca = pca.fit_transform(X_train_scaled)
-        X_test_pca = pca.transform(X_test_scaled)
+        # (Removemos o PCA para manter 100% da informação das 30 colunas)
         
         if fold == 0:
             print(f"--- Comparativo de Sistemas (Fold 1) ---")
-            print(f"Baseline:  Features encoded ({X_train_enc.shape[1]})")
-            print(f"MLP Pro:   Features via PCA ({X_train_pca.shape[1]})")
+            print(f"Features finais no treino: {X_train_scaled.shape[1]}")
 
-        mlp = PyTorchWrapper(input_dim=X_train_pca.shape[1])
-        mlp.fit(X_train_pca, y_train)
-        pred_mlp = mlp.predict_proba(X_test_pca)[:, 1]
+        # 1. Baseline Original
+        baseline_pipeline.fit(X_train_scaled, y_train)
+        pred_base = baseline_pipeline.predict_proba(X_test_scaled)[:, 1]
+        score_base = roc_auc_score(y_test, pred_base)
+        auc_baseline.append(score_base)
+        
+        # 2. Rede Neural (MLP)
+        # Usamos batch_size=64 para um aprendizado mais refinado
+        mlp = PyTorchWrapper(input_dim=X_train_scaled.shape[1], hidden_dims=[256, 128, 64])
+        
+        # Ajuste interno do fit para usar batch_size=64
+        mlp.fit(X_train_scaled, y_train)
+        
+        pred_mlp = mlp.predict_proba(X_test_scaled)[:, 1]
         score_mlp = roc_auc_score(y_test, pred_mlp)
         auc_mlp.append(score_mlp)
         
