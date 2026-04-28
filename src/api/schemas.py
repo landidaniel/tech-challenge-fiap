@@ -19,7 +19,9 @@ class CustomerFeatures(BaseModel):
 
     # Demografico
     gender: str = Field(..., description="Male ou Female")
-    senior_citizen: int = Field(..., ge=0, le=1, description="1 se idoso, 0 caso contrario")
+    senior_citizen: int = Field(
+        ..., ge=0, le=1, description="1 se idoso, 0 caso contrario"
+    )
     partner: str = Field(..., description="Yes ou No")
     dependents: str = Field(..., description="Yes ou No")
 

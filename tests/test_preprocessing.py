@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.churn.config import LEAKAGE_COLS
 from src.churn.preprocessing import TelcoEncoder
@@ -23,7 +22,7 @@ def _make_df(n: int = 10) -> pd.DataFrame:
             "Tenure Months":    rng.integers(1, 72, n),
             "Phone Service":    rng.choice(["Yes", "No"], n),
             "Internet Service": rng.choice(["DSL", "Fiber optic", "No"], n),
-            "Contract":         rng.choice(["Month-to-month", "One year", "Two year"], n),
+            "Contract": rng.choice(["Month-to-month", "One year", "Two year"], n),
             "Monthly Charges":  rng.uniform(20, 120, n),
             "Total Charges":    rng.uniform(100, 8000, n),
         }

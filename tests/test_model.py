@@ -1,10 +1,9 @@
 """Testes unitarios para src/churn/model.py (ChurnMLP)."""
 
-import torch
 import pytest
+import torch
 
 from src.churn.model import ChurnMLP
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -40,7 +39,9 @@ class TestChurnMLPArchitecture:
         with torch.no_grad():
             out = model(sample_batch)
         # logits nao precisam estar em [0, 1]
-        assert (out < 0).any() or (out > 1).any(), "Parece que sigmoid foi aplicado no forward"
+        assert (out < 0).any() or (out > 1).any(), (
+            "Parece que sigmoid foi aplicado no forward"
+        )
 
     def test_predict_proba_in_range(self, model, sample_batch):
         probs = model.predict_proba(sample_batch)

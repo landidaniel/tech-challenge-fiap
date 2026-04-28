@@ -7,6 +7,7 @@ load_artifacts  : carrega scaler + modelo do disco
 
 from __future__ import annotations
 
+import logging
 import pickle
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from sklearn.preprocessing import StandardScaler
 from .config import ARTIFACTS_DIR
 from .model import ChurnMLP
 from .preprocessing import TelcoEncoder
+
+_log = logging.getLogger("churn.pipeline")
 
 
 def build_pipeline() -> Pipeline:
@@ -61,7 +64,7 @@ def save_artifacts(
     with open(out_dir / "meta.pkl", "wb") as f:
         pickle.dump(meta, f)
 
-    print(f"Artefatos salvos em: {out_dir}")
+    _log.info("Artefatos salvos em: %s", out_dir)
 
 
 def load_artifacts(

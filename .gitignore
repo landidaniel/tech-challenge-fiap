@@ -1,8 +1,55 @@
+# Python
 __pycache__/
-.ipynb_checkpoints/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
 .venv/
+venv/
 .env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# ML artifacts (gerados por scripts/train_and_save.py)
+models/*.pkl
+models/*.pth
+
+# MLflow tracking
 mlruns/
-/mlruns
+notebooks/mlruns/
+notebooks/mlflow.db
+mlflow.db
+
+# Dados (arquivos grandes nao versionados)
+data/*.xlsx
+data/*.csv
+
+# Outputs gerados
+outputs/
+*.png
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Arquivos temporarios do projeto
+conceitos_ml_etapa2.pdf
+gerar_pdf.py
+notebooks/Etapa_2.py
+notebooks/gen_etapa2.py
+
+# Claude Code
 .claude/
-.png

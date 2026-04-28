@@ -8,7 +8,10 @@ from typing import Any
 
 
 class JsonFormatter(logging.Formatter):
-    """Formata logs como JSON de linha unica para ingestao em sistemas de observabilidade."""
+    """Formata logs como JSON de linha unica.
+
+    Compativel com pipelines de observabilidade (Datadog, CloudWatch, ELK).
+    """
 
     def format(self, record: logging.LogRecord) -> str:
         import json

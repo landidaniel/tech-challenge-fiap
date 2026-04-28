@@ -43,7 +43,8 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 configure_logging(LOG_LEVEL)
 logger = get_logger("api.main")
 
-_ARTIFACTS_DIR = Path(os.getenv("ARTIFACTS_DIR", str(Path(__file__).parent.parent.parent / "models")))
+_default_artifacts = str(Path(__file__).parent.parent.parent / "models")
+_ARTIFACTS_DIR = Path(os.getenv("ARTIFACTS_DIR", _default_artifacts))
 _DEVICE = torch.device("cpu")
 
 # Estado global (carregado no startup)
@@ -92,7 +93,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Churn Prediction API",
-    description="API de inferencia de churn para clientes Telco — FIAP Tech Challenge Etapa 3",
+    description="API de inferencia de churn para clientes Telco — FIAP Tech Challenge",
     version=VERSION,
     lifespan=lifespan,
 )
@@ -134,7 +135,9 @@ def predict(customer: CustomerFeatures) -> PredictResponse:
         )
     except Exception as exc:
         logger.exception("Erro na inferencia: %s", exc)
-        raise HTTPException(status_code=422, detail=f"Erro na inferencia: {exc}") from exc
+        raise HTTPException(
+            status_code=422, detail=f"Erro na inferencia: {exc}"
+        ) from exc
 
     prob = float(probs[0])
     label = bool(labels[0])
@@ -180,7 +183,9 @@ def predict_batch(request: BatchPredictRequest) -> BatchPredictResponse:
         )
     except Exception as exc:
         logger.exception("Erro na inferencia em lote: %s", exc)
-        raise HTTPException(status_code=422, detail=f"Erro na inferencia: {exc}") from exc
+        raise HTTPException(
+            status_code=422, detail=f"Erro na inferencia: {exc}"
+        ) from exc
 
     predictions = [
         PredictResponse(

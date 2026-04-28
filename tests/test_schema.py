@@ -8,8 +8,7 @@ import numpy as np
 import pandas as pd
 import pandera.pandas as pa
 import pytest
-from pandera.pandas import Column, DataFrameSchema, Check
-
+from pandera.pandas import Check, Column, DataFrameSchema
 
 # ---------------------------------------------------------------------------
 # Schema pandera para o dataset Telco (pos-load_raw, sem leakage)
@@ -80,7 +79,7 @@ def _make_valid_df(n: int = 20) -> pd.DataFrame:
             "Tenure Months":    rng.integers(0, 72, n).astype(int),
             "Monthly Charges":  rng.uniform(20.0, 120.0, n).astype(float),
             "Total Charges":    rng.uniform(0.0, 8000.0, n).astype(float),
-            "Contract":         rng.choice(["Month-to-month", "One year", "Two year"], n),
+            "Contract": rng.choice(["Month-to-month", "One year", "Two year"], n),
             "Internet Service": rng.choice(["DSL", "Fiber optic", "No"], n),
         }
     )

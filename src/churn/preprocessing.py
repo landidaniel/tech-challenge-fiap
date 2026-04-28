@@ -29,7 +29,9 @@ def load_raw(path: str | Path) -> tuple[pd.DataFrame, pd.Series]:
     y : pd.Series     — alvo binario 0/1
     """
     df = pd.read_excel(path)
-    df["Total Charges"] = pd.to_numeric(df["Total Charges"], errors="coerce").fillna(0.0)
+    df["Total Charges"] = pd.to_numeric(
+        df["Total Charges"], errors="coerce"
+    ).fillna(0.0)
     y = (df["Churn Label"] == "Yes").astype(int).rename("Churn")
 
     drop_cols = [c for c in LEAKAGE_COLS + ["Churn"] if c in df.columns]

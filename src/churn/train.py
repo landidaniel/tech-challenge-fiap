@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,6 +12,8 @@ from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 
 from .model import ChurnMLP
+
+_log = logging.getLogger("churn.train")
 
 
 def train(
@@ -108,14 +112,15 @@ def train(
             no_improve += 1
 
         if epoch % 10 == 0:
-            print(
-                f"Epoch {epoch:3d} | train={train_loss:.4f} | "
-                f"val={val_loss:.4f} | f1={val_f1:.4f} | "
-                f"patience={no_improve}/{patience}"
+            _log.info(
+                "Epoch %3d | train=%.4f | val=%.4f | f1=%.4f | patience=%d/%d",
+                epoch, train_loss, val_loss, val_f1, no_improve, patience,
             )
 
         if no_improve >= patience:
-            print(f"\nEarly stopping epoch {epoch} (best val_loss={best_val_loss:.4f})")
+            _log.info(
+                "Early stopping epoch %d (best val_loss=%.4f)", epoch, best_val_loss
+            )
             break
 
     if best_state is not None:
