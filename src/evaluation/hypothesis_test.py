@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 # Importações oficiais do projeto
 from churn.model import ChurnMLP
@@ -29,12 +30,12 @@ from churn_baseline.model import get_baseline_model
 # Para usar o PyTorch dentro do K-Fold facilmente, criamos uma classe "Wrapper" 
 # que se comporta como um modelo do Scikit-Learn (tem fit e predict_proba)
 class PyTorchWrapper:
-    def __init__(self, input_dim, hidden_dims=[256, 128, 64], epochs=150, lr=0.001):
+    def __init__(self, input_dim, hidden_dims=[512, 256, 128, 64], epochs=200, lr=0.001, dropout=[0.5, 0.3, 0.2, 0.1]):
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.epochs = epochs
         self.lr = lr
-        self.model = ChurnMLP(input_dim=input_dim, hidden_dims=hidden_dims)
+        self.model = ChurnMLP(input_dim=input_dim, hidden_dims=hidden_dims, dropout=dropout)
 
     def fit(self, X, y):
         # Para um treino idêntico ao do projeto, precisamos de um split de validação interno
@@ -49,10 +50,7 @@ class PyTorchWrapper:
         train_loader = DataLoader(train_ds, batch_size=256, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=256, shuffle=False)
 
-        # Calculando pos_weight para o treinamento
-        pos_weight = float((y_t == 0).sum() / (y_t == 1).sum())
-
-        # Chamando a função oficial de treinamento do projeto
+        # Chamando a função oficial de treinamento do projeto (sem pos_weight para focar em AUC)
         train_mlp(
             model=self.model,
             train_loader=train_loader,
@@ -60,7 +58,7 @@ class PyTorchWrapper:
             device=torch.device("cpu"),
             lr=self.lr,
             epochs=self.epochs,
-            pos_weight=pos_weight
+            pos_weight=None
         )
 
     def predict_proba(self, X):
@@ -86,31 +84,39 @@ def run_hypothesis_test(X, y, baseline_pipeline, mlp_wrapper, n_splits=5, alpha=
     print(f"\n--- Iniciando Validação Cruzada ({n_splits}-Fold) ---")
     
     for fold, (train_idx, test_idx) in enumerate(skf.split(X, y)):
-        X_train, X_test = X[train_idx], X[test_idx]
+        # Usamos .iloc para manter os dtypes originais do DataFrame
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
         
-        # --- PREPROCESSAMENTO COMUM (Encoding oficial) ---
+        # --- PREPROCESSAMENTO (Encoding Oficial) ---
         encoder = TelcoEncoder()
-        X_train_enc = encoder.fit_transform(pd.DataFrame(X_train, columns=X_columns))
-        X_test_enc = encoder.transform(pd.DataFrame(X_test, columns=X_columns))
+        X_train_enc = encoder.fit_transform(X_train)
+        X_test_enc = encoder.transform(X_test)
 
-        # 1. Baseline
-        # O baseline_pipeline já possui o StandardScaler interno
+        # 1. Baseline Original (Conforme definido no projeto: Scaler + LogReg)
+        # O baseline_pipeline já possui o StandardScaler interno e não usa PCA
         baseline_pipeline.fit(X_train_enc, y_train)
         pred_base = baseline_pipeline.predict_proba(X_test_enc)[:, 1]
         score_base = roc_auc_score(y_test, pred_base)
         auc_baseline.append(score_base)
         
-        # 2. Rede Neural (MLP)
-        # Normalização específica para a MLP
+        # 2. Sistema MLP Turbinado (Com Normalização + PCA + Arquitetura Pro)
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train_enc)
         X_test_scaled = scaler.transform(X_test_enc)
+
+        pca = PCA(n_components=0.95, random_state=SEED)
+        X_train_pca = pca.fit_transform(X_train_scaled)
+        X_test_pca = pca.transform(X_test_scaled)
         
-        # Inicializando o Wrapper que usa o treinamento oficial do projeto
-        mlp = PyTorchWrapper(input_dim=X_train_scaled.shape[1])
-        mlp.fit(X_train_scaled, y_train)
-        pred_mlp = mlp.predict_proba(X_test_scaled)[:, 1]
+        if fold == 0:
+            print(f"--- Comparativo de Sistemas (Fold 1) ---")
+            print(f"Baseline:  Features encoded ({X_train_enc.shape[1]})")
+            print(f"MLP Pro:   Features via PCA ({X_train_pca.shape[1]})")
+
+        mlp = PyTorchWrapper(input_dim=X_train_pca.shape[1])
+        mlp.fit(X_train_pca, y_train)
+        pred_mlp = mlp.predict_proba(X_test_pca)[:, 1]
         score_mlp = roc_auc_score(y_test, pred_mlp)
         auc_mlp.append(score_mlp)
         
@@ -162,16 +168,14 @@ if __name__ == "__main__":
     # Carregando dados reais do curso
     try:
         X_df, y = load_telco_data()
-        X_columns = X_df.columns
-        X_values = X_df.values # Passamos os valores para o StratifiedKFold
         
         print(f"Dataset carregado: {X_df.shape[0]} amostras e {X_df.shape[1]} colunas brutas.")
         
         # Preparando Baseline centralizado
         baseline = get_baseline_model(max_iter=1000)
         
-        # Rodando o Teste de Hipótese
-        run_hypothesis_test(X_values, y, baseline, None, n_splits=5, alpha=0.05)
+        # Rodando o Teste de Hipótese (X_df agora é passado como DataFrame completo)
+        run_hypothesis_test(X_df, y, baseline, None, n_splits=10, alpha=0.05)
         
     except FileNotFoundError:
         print("❌ Erro: Arquivo 'data/Telco_customer_churn.xlsx' não encontrado.")

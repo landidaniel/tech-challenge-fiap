@@ -29,17 +29,19 @@ class ChurnMLP(nn.Module):
         self,
         input_dim: int,
         hidden_dims: list[int],
-        dropout: float = 0.3,
+        dropout: float | list[float] = 0.3,
     ) -> None:
         super().__init__()
         layers: list[nn.Module] = []
         in_dim = input_dim
-        for h in hidden_dims:
+        for i, h in enumerate(hidden_dims):
+            # Se dropout for uma lista, usa o valor da camada, senão usa o valor fixo
+            d = dropout[i] if isinstance(dropout, list) else dropout
             layers += [
                 nn.Linear(in_dim, h),
                 nn.BatchNorm1d(h),
                 nn.ReLU(),
-                nn.Dropout(dropout),
+                nn.Dropout(d),
             ]
             in_dim = h
         layers.append(nn.Linear(in_dim, 1))
