@@ -29,6 +29,9 @@ notebooks/mlruns/
 notebooks/mlflow.db
 mlflow.db
 
+# Local Artifacts
+artifacts/
+
 # Dados (arquivos grandes nao versionados)
 data/*.xlsx
 data/*.csv
