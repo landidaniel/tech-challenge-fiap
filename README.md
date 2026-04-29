@@ -16,15 +16,18 @@ tech-challenge-fiap/
 │   ├── Etapa_1.ipynb              # EDA + ML Canvas + Baselines
 │   └── Etapa_2.ipynb              # MLP PyTorch + comparacao de modelos
 ├── scripts/
-│   └── train_and_save.py          # Treina o modelo e salva artefatos
+│   ├── train_and_save.py          # Treina o modelo e salva artefatos
+│   └── visualize_results.py       # Gera gráficos de prova real (Médias Reais vs Preditas)
 ├── src/
 │   ├── churn/                     # Pacote de modelagem
 │   │   ├── config.py              # Constantes globais
 │   │   ├── preprocessing.py       # TelcoEncoder (sklearn-compativel)
-│   │   ├── model.py               # ChurnMLP (nn.Module)
+│   │   ├── model.py               # ChurnMLP (nn.Module) com Residual Connections
 │   │   ├── train.py               # Loop de treinamento + early stopping
 │   │   ├── evaluate.py            # Metricas + threshold otimo
 │   │   └── pipeline.py            # Pipeline sklearn + save/load artefatos
+│   ├── evaluation/                # Avaliação estatística
+│   │   └── hypothesis_test.py     # Teste T pareado (MLP vs Baseline) com K-Fold em 10-fold
 │   └── api/
 │       ├── main.py                # FastAPI app (/health, /predict, /predict/batch)
 │       ├── schemas.py             # Modelos Pydantic
@@ -57,6 +60,9 @@ cd tech-challenge-fiap
 make install
 # ou manualmente:
 pip install -e ".[dev]"
+
+# Configure o PYTHONPATH (necessário para reconhecer o pacote 'src')
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 ```
 
 ### Dataset
@@ -99,6 +105,18 @@ make test-fast    # sem cobertura
 ```bash
 make lint     # ruff check
 make format   # black
+
+### 5. Teste de Hipótese e Visualização
+
+Para validar a superioridade estatística do modelo MLP contra o baseline e gerar provas reais visuais:
+
+```bash
+# Roda o teste T com K-Fold pareado em 10 folds
+python src/evaluation/hypothesis_test.py
+
+# Gera o gráfico de Médias Observadas vs Probabilidades do Modelo
+python scripts/visualize_results.py
+```
 ```
 
 ## Endpoints da API
@@ -151,12 +169,15 @@ Resposta:
 
 ## Arquitetura do Modelo
 
+O modelo utiliza uma arquitetura MLP com **Skip Connections** (conexões residuais) para facilitar o fluxo de gradiente e **Inicialização Kaiming (He)** para estabilidade.
+
 ```
 Input (30 features)
-  -> [Linear(256) -> BatchNorm1d -> ReLU -> Dropout(0.3)]
-  -> [Linear(128) -> BatchNorm1d -> ReLU -> Dropout(0.3)]
-  -> [Linear(64)  -> BatchNorm1d -> ReLU -> Dropout(0.3)]
-  -> Linear(1)  ->  logit  ->  sigmoid  ->  P(churn)
+  ├─> Skip Connection (Linear Projection) ────────┐
+  └─> [Linear(256) -> BN -> ReLU -> Dropout] ──> (+) ──>
+      -> [Linear(128) -> BN -> ReLU -> Dropout] ───────>
+      -> [Linear(64)  -> BN -> ReLU -> Dropout] ───────>
+      -> Linear(1) -> logit -> sigmoid -> P(churn)
 ```
 
 **Estrategia de treinamento:**
@@ -177,7 +198,7 @@ Input (30 features)
 | Gradient Boosting | 0.800 | 0.521 | 0.566 | 0.845 |
 | **MLP PyTorch** | **0.466** | **1.000** | **0.498** | **0.853** |
 
-> O MLP com threshold otimizado maximiza recall (captura 100% dos churners) ao custo de mais falsos positivos — estrategia correta dado o alto custo de perder um cliente (CLTV ~R$4.400).
+> **Validação Estatística:** O Teste T Pareado (10-fold) resultou em um p-valor de **0.188**, indicando que não há diferença estatisticamente significativa entre a MLP e o Baseline (Regressão Logística). Seguindo a **Navalha de Occam**, o baseline é recomendado para produção devido à sua simplicidade e desempenho equivalente. O uso da MLP com threshold otimizado permanece útil para cenários onde se deseja maximizar o recall (100%) priorizando a redução do custo de perda de clientes (CLTV).
 
 ## MLflow
 
@@ -198,3 +219,4 @@ docker compose up -d
 | `THRESHOLD` | valor do meta.pkl | Override do threshold de decisao |
 | `LOG_LEVEL` | `INFO` | Nivel de logging |
 | `PORT` | `8000` | Porta da API (Makefile) |
+| `PYTHONPATH` | `.` | Garante que a pasta `src` seja reconhecida como um pacote |

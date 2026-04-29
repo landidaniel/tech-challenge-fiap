@@ -37,14 +37,18 @@ Rede neural MLP (Multi-Layer Perceptron) treinada com PyTorch para classificacao
 
 ---
 
-## Arquitetura
-
 ```
-Input (30) -> Linear(256) -> BN -> ReLU -> Dropout(0.3)
-           -> Linear(128) -> BN -> ReLU -> Dropout(0.3)
-           -> Linear(64)  -> BN -> ReLU -> Dropout(0.3)
+Input (30) -> Skip Connection (Linear Projection) ────────┐
+           -> Linear(256) -> BN -> ReLU -> Dropout(var) ──> (+)
+           -> Linear(128) -> BN -> ReLU -> Dropout(var)
+           -> Linear(64)  -> BN -> ReLU -> Dropout(var)
            -> Linear(1)   -> logit
 ```
+
+**Arquitetura:**
+- **Residual Connections:** Implementada conexão residual da entrada para a saída da primeira camada oculta para melhorar a convergência.
+- **Layer-wise Dropout:** Suporte a taxas diferenciadas por camada para melhor regularização.
+- **Inicialização He/Kaiming:** Aplicada a todas as camadas lineares (nonlinearity='relu').
 
 **Treinamento:**
 - Otimizador: Adam (lr=1e-3, weight_decay=1e-4)
@@ -52,7 +56,7 @@ Input (30) -> Linear(256) -> BN -> ReLU -> Dropout(0.3)
 - Scheduler: ReduceLROnPlateau (fator=0.5, patience=5)
 - Early Stopping: patience=15 epochs sem melhora de val_loss
 - Seed: 42 (reproducibilidade)
-- Epochs treinados: ~23 (early stopping ativado)
+- Epochs treinados: ~50 (configuração atual)
 
 ---
 
@@ -78,6 +82,13 @@ Input (30) -> Linear(256) -> BN -> ReLU -> Dropout(0.3)
 | Random Forest | 0.543 | 0.830 | 0.489 |
 | Gradient Boosting | 0.566 | 0.845 | 0.521 |
 | **MLP (threshold otimo)** | 0.498 | **0.853** | **1.000** |
+
+### Validação Estatística
+
+Para garantir que a superioridade da MLP não seja fruto do acaso, realizamos um **Teste T de Student Pareado** (K-fold cross-validation, utilizando 10-folds) comparando o AUC-ROC da MLP contra o Baseline de Regressão Logística.
+
+- **P-valor:** 0.18876 (Alfa = 0.05)
+- **Conclusão:** Falhamos em rejeitar a hipótese nula (H0). Não há evidência estatística de que a MLP seja superior à Regressão Logística em termos de AUC-ROC. Seguindo a **Navalha de Occam**, recomenda-se o uso do modelo Baseline por sua menor complexidade e desempenho equivalente.
 
 ### Analise de custo de negocio
 
