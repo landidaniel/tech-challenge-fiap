@@ -47,7 +47,7 @@ class ChurnMLP(nn.Module):
             
         self.output_layer = nn.Linear(in_dim, 1)
         
-        # Projeção para a Skip Connection (ajusta a dimensão do input para a dimensão da primeira camada)
+        # Skip connection: projeta input para dim da primeira camada oculta
         self.input_shortcut = nn.Linear(input_dim, hidden_dims[0])
 
         # Inicialização He (Kaiming) para estabilidade

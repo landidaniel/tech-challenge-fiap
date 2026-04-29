@@ -52,7 +52,9 @@ fix = true
 select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"scripts/gerar_guia_projeto.py" = ["E501"]
+"scripts/gerar_guia_projeto.py"     = ["E501"]
+"scripts/visualize_results.py"      = ["E501"]
+"src/evaluation/hypothesis_test.py" = ["E501"]
 
 [tool.black]
 line-length = 88
