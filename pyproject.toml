@@ -51,6 +51,9 @@ fix = true
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/gerar_guia_projeto.py" = ["E501"]
+
 [tool.black]
 line-length = 88
 target-version = ["py311"]
