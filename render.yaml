@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: churn-prediction-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ARTIFACTS_DIR
+        value: models
+      - key: LOG_LEVEL
+        value: INFO
+    healthCheckPath: /health

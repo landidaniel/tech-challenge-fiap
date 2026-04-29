@@ -20,8 +20,9 @@ htmlcov/
 .ruff_cache/
 
 # ML artifacts (gerados por scripts/train_and_save.py)
-models/*.pkl
-models/*.pth
+# models/ commitado para viabilizar deploy no Render sem re-treino
+# models/*.pkl
+# models/*.pth
 
 # MLflow tracking
 mlruns/
