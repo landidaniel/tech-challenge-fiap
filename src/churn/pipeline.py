@@ -94,7 +94,10 @@ def load_artifacts(
         hidden_dims=meta["hidden_dims"],
         dropout=meta["dropout"],
     )
-    model.load_state_dict(torch.load(artifacts_dir / "model.pth", map_location=device))
+    state = torch.load(
+        artifacts_dir / "model.pth", map_location=device, weights_only=True
+    )
+    model.load_state_dict(state)
     model.to(device).eval()
 
     return pipeline, model, meta

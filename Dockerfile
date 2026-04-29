@@ -6,16 +6,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# PyTorch CPU-only primeiro (evita baixar versao CUDA de ~2GB)
+# PyTorch 2.4 CPU-only — compativel com numpy 2.x
 RUN pip install --no-cache-dir \
-    torch==2.2.2 \
+    torch==2.4.0 \
     --index-url https://download.pytorch.org/whl/cpu
 
-# Demais dependencias (sem torch — ja instalado acima)
+# Demais dependencias
 COPY pyproject.toml ./
 RUN pip install --no-cache-dir \
+    "numpy>=2.0" \
     pandas \
-    numpy \
     scikit-learn \
     fastapi \
     "uvicorn[standard]" \
