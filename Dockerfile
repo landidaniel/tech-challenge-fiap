@@ -2,21 +2,31 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instala dependencias do sistema necessarias para torch e openpyxl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia manifesto primeiro para aproveitar cache de camadas
+# PyTorch CPU-only primeiro (evita baixar versao CUDA de ~2GB)
+RUN pip install --no-cache-dir \
+    torch==2.2.2 \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# Demais dependencias (sem torch — ja instalado acima)
 COPY pyproject.toml ./
+RUN pip install --no-cache-dir \
+    pandas \
+    numpy \
+    scikit-learn \
+    fastapi \
+    "uvicorn[standard]" \
+    pydantic \
+    openpyxl \
+    mlflow
+
 COPY src/ ./src/
 COPY models/ ./models/
 
-# Instala dependencias do projeto (sem extras de dev)
-RUN pip install --no-cache-dir -e .
-
-# Copia restante do codigo
-COPY . .
+RUN pip install --no-cache-dir -e . --no-deps
 
 EXPOSE 8000
 
