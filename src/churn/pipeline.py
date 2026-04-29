@@ -12,6 +12,7 @@ import pickle
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -106,17 +107,37 @@ def load_artifacts(
 def _infer_hidden_dims(model: ChurnMLP) -> list[int]:
     """Extrai hidden_dims inspecionando as camadas Linear do modelo."""
     dims = []
-    layers = list(model.net.children())
-    for layer in layers[:-1]:  # ultima Linear e a camada de saida
-        if isinstance(layer, torch.nn.Linear):
-            dims.append(layer.out_features)
+    # Compativel com modelo original (self.net) e residual (self.layers)
+    if hasattr(model, "layers"):
+        for seq in model.layers:
+            # Cada seq e um Sequential([Linear, BatchNorm, ReLU, Dropout])
+            for layer in seq:
+                if isinstance(layer, torch.nn.Linear):
+                    dims.append(layer.out_features)
+    elif hasattr(model, "net"):
+        layers = list(model.net.children())
+        for layer in layers[:-1]:
+            if isinstance(layer, torch.nn.Linear):
+                dims.append(layer.out_features)
     return dims
 
 
-def _infer_dropout(model: ChurnMLP) -> float:
-    for layer in model.net.children():
-        if isinstance(layer, torch.nn.Dropout):
-            return layer.p
+def _infer_dropout(model: ChurnMLP) -> float | list[float]:
+    # Compativel com modelo original (self.net) e residual (self.layers)
+    if hasattr(model, "layers"):
+        dropouts = []
+        for seq in model.layers:
+            for layer in seq:
+                if isinstance(layer, torch.nn.Dropout):
+                    dropouts.append(layer.p)
+        # Se todos forem iguais, retorna como float, senao retorna a lista
+        if len(set(dropouts)) == 1:
+            return dropouts[0]
+        return dropouts
+    elif hasattr(model, "net"):
+        for layer in model.net.children():
+            if isinstance(layer, torch.nn.Dropout):
+                return layer.p
     return 0.0
 
 
