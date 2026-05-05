@@ -1,0 +1,28 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\Administrador\\Documents\\tech-challenge-fiap']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [16836] using WatchFiles
+INFO:     Started server process [2344]
+INFO:     Waiting for application startup.
+{"timestamp": "2026-04-28 21:24:49,098", "level": "INFO", "logger": "api.main", "message": "Modelo carregado. input_dim=30 threshold=0.059"}
+INFO:     Application startup complete.
+{"timestamp": "2026-04-28 21:24:49,642", "level": "INFO", "logger": "api.access", "message": "GET /health -> 200 (1.56ms)", "request_id": "e283b05c-f41f-49c2-962a-d77b0b5ee361", "path": "/health", "method": "GET", "status_code": 200, "latency_ms": 1.56}
+INFO:     127.0.0.1:53337 - "GET /health HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:25:14,606", "level": "INFO", "logger": "api.main", "message": "predict customer_id=None prob=0.6399 label=True threshold=0.059"}
+{"timestamp": "2026-04-28 21:25:14,606", "level": "INFO", "logger": "api.access", "message": "POST /predict -> 200 (10.89ms)", "request_id": "c1c32a1a-584d-4e74-b067-f855131993d1", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 10.89}
+INFO:     127.0.0.1:50729 - "POST /predict HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:38:21,557", "level": "INFO", "logger": "api.access", "message": "GET /docs -> 200 (0.63ms)", "request_id": "6c928098-932b-463e-b1fd-262208d370c4", "path": "/docs", "method": "GET", "status_code": 200, "latency_ms": 0.63}
+INFO:     127.0.0.1:62364 - "GET /docs HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:38:21,869", "level": "INFO", "logger": "api.access", "message": "GET /docs -> 200 (0.22ms)", "request_id": "694b1f83-dd18-41a8-a167-6359acf3afd5", "path": "/docs", "method": "GET", "status_code": 200, "latency_ms": 0.22}
+INFO:     127.0.0.1:51886 - "GET /docs HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:38:21,952", "level": "INFO", "logger": "api.access", "message": "GET /openapi.json -> 200 (15.45ms)", "request_id": "131d921e-2e92-4dd7-b25b-6e280a1c5cc6", "path": "/openapi.json", "method": "GET", "status_code": 200, "latency_ms": 15.45}
+INFO:     127.0.0.1:62364 - "GET /openapi.json HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:38:29,644", "level": "INFO", "logger": "api.access", "message": "POST /predict -> 422 (0.94ms)", "request_id": "ea4c5e04-1c90-4ef4-98fa-edc067c8b31c", "path": "/predict", "method": "POST", "status_code": 422, "latency_ms": 0.94}
+INFO:     127.0.0.1:62460 - "POST /predict HTTP/1.1" 422 Unprocessable Content
+{"timestamp": "2026-04-28 21:38:30,992", "level": "INFO", "logger": "api.access", "message": "POST /predict -> 422 (0.98ms)", "request_id": "52a4fbd6-9695-4a9e-be4f-9f8f00adc42e", "path": "/predict", "method": "POST", "status_code": 422, "latency_ms": 0.98}
+INFO:     127.0.0.1:62460 - "POST /predict HTTP/1.1" 422 Unprocessable Content
+{"timestamp": "2026-04-28 21:38:47,536", "level": "INFO", "logger": "api.access", "message": "GET /health -> 200 (0.82ms)", "request_id": "ad3016dd-20be-40df-8a36-152ea1a12f2a", "path": "/health", "method": "GET", "status_code": 200, "latency_ms": 0.82}
+INFO:     127.0.0.1:51302 - "GET /health HTTP/1.1" 200 OK
+{"timestamp": "2026-04-28 21:38:49,574", "level": "INFO", "logger": "api.access", "message": "GET /health -> 200 (0.83ms)", "request_id": "05338713-ed5a-4899-b6fa-96f52ff26491", "path": "/health", "method": "GET", "status_code": 200, "latency_ms": 0.83}
+INFO:     127.0.0.1:51302 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'src\churn\pipeline.py'. Reloading...
+ 

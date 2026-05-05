@@ -1,21 +1,23 @@
 import sys
 from pathlib import Path
+
 import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-import torch
 import pandas as pd
+import seaborn as sns
+import torch
 from sklearn.model_selection import train_test_split
 
 # Adiciona src ao path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.churn.preprocessing import load_raw, TelcoEncoder
-from src.churn.model import ChurnMLP
-from src.churn.train import train
-from src.churn.evaluate import get_probs
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
+
+from src.churn.evaluate import get_probs
+from src.churn.model import ChurnMLP
+from src.churn.preprocessing import TelcoEncoder, load_raw
+from src.churn.train import train
+
 
 def run_visualization():
     # 1. Carregar Dados

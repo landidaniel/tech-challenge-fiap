@@ -1,25 +1,25 @@
-import numpy as np
-import pandas as pd
-import torch
 import sys
 from pathlib import Path
+
+import numpy as np
+import torch
 
 # Adiciona o diretório 'src' ao path para permitir importações sem o prefixo 'src.'
 # Útil quando o script é executado diretamente.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scipy import stats
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
+from torch.utils.data import DataLoader, TensorDataset
+
+from churn.config import DATA_PATH, SEED
 
 # Importações oficiais do projeto
 from churn.model import ChurnMLP
-from churn.preprocessing import load_raw, TelcoEncoder
+from churn.preprocessing import TelcoEncoder, load_raw
 from churn.train import train as train_mlp
-from churn.config import SEED, DATA_PATH
 from churn_baseline.model import get_baseline_model
 
 # ---------------------------------------------------------
@@ -101,7 +101,7 @@ def run_hypothesis_test(X, y, baseline_pipeline, mlp_wrapper, n_splits=5, alpha=
         # (Removemos o PCA para manter 100% da informação das 30 colunas)
         
         if fold == 0:
-            print(f"--- Comparativo de Sistemas (Fold 1) ---")
+            print("--- Comparativo de Sistemas (Fold 1) ---")
             print(f"Features finais no treino: {X_train_scaled.shape[1]}")
 
         # 1. Baseline Original

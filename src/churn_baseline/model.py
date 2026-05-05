@@ -1,8 +1,9 @@
 """Definição do modelo baseline de churn (Logistic Regression)."""
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
 
 def get_baseline_model(max_iter: int = 1000) -> Pipeline:
     """
