@@ -359,7 +359,59 @@ Com threshold=0.059, o modelo captura **100% dos clientes em risco** com um volu
 
 ## Monitoramento e Deploy
 
-### Deploy (Docker)
+### Arquitetura de Deploy
+
+A API está em produção no **Render.com** via container Docker. O fluxo completo é:
+
+```
+Repositório GitHub (main)
+        │
+        │  push → build automático
+        ▼
+┌─────────────────────────────────────┐
+│           Render.com                │
+│                                     │
+│  Docker build (Dockerfile)          │
+│    └─ copia src/ + models/          │
+│    └─ instala dependências          │
+│                                     │
+│  Web Service :8000                  │
+│    └─ uvicorn src.api.main:app      │
+│    └─ health check: GET /health     │
+└────────────────┬────────────────────┘
+                 │
+                 │  HTTPS (TLS gerenciado pelo Render)
+                 ▼
+          Clientes / CRM / API consumers
+```
+
+Os artefatos treinados (`models/pipeline.pkl`, `models/model.pth`, `models/meta.pkl`) são **versionados no git** e copiados para dentro da imagem Docker no build, eliminando a necessidade de um model registry externo em produção.
+
+### Deploy no Render.com
+
+O arquivo `render.yaml` descreve o serviço:
+
+```yaml
+services:
+  - type: web
+    name: churn-prediction-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ARTIFACTS_DIR
+        value: models
+      - key: LOG_LEVEL
+        value: INFO
+    healthCheckPath: /health
+```
+
+Para fazer o deploy:
+1. Conecte o repositório ao Render.com
+2. O Render detecta o `render.yaml` automaticamente
+3. Cada push na branch `main` dispara um novo build e redeploy
+
+### Executar localmente com Docker
 
 ```bash
 # Build da imagem
@@ -368,13 +420,6 @@ docker build -t churn-api .
 # Execução local
 docker run -p 8000:8000 -e LOG_LEVEL=INFO churn-api
 ```
-
-### Deploy no Render.com
-
-O arquivo `render.yaml` configura automaticamente o serviço:
-- Tipo: Docker web
-- Health check: `GET /health`
-- Os artefatos treinados (`models/`) são versionados no git e copiados para a imagem.
 
 ### Rastreamento com MLflow
 
